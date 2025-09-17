@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CSV 表示</title>
+</head>
+<body>
+  <h1>CSV アップロード</h1>
+  <input type="file" id="csvInput" />
+  <button onclick="uploadCSV()">アップロード</button>
+
+  <h2>結果</h2>
+  <table border="1" id="csvTable"></table>
+
+  <script>
+    async function uploadCSV() {
+      const input = document.getElementById("csvInput");
+      if (!input.files.length) return;
+
+      const formData = new FormData();
+      formData.append("file", input.files[0]);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+
+      // テーブル生成
+      const table = document.getElementById("csvTable");
+      table.innerHTML = "";
+
+      // ヘッダー
+      const headerRow = document.createElement("tr");
+      json.columns.forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      // データ
+      json.data.forEach(row => {
+        const tr = document.createElement("tr");
+        json.columns.forEach(col => {
+          const td = document.createElement("td");
+          td.textContent = row[col];
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
