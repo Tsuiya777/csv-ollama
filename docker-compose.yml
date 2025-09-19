@@ -3,16 +3,35 @@ version: "3.9"
 services:
   backend:
     build: ./backend
-    container_name: csv-ollama_fastapi
+    container_name: fastapi
     ports:
       - "8000:8000"
     restart: unless-stopped
 
   frontend:
     build: ./frontend
-    container_name: csv-ollama_nginx
+    container_name: nginx
     ports:
       - "80:80"
     depends_on:
       - backend
     restart: unless-stopped
+  
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    # Let ollama pull and exec LLM automatically
+    entrypoint: [ "sh", "-c" ]
+    command: >
+      "ollama serve & sleep 5 && ollama run gemma3:4b --keepalive=-1m && echo '--- Model loaded ---' && wait"
+    ### 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [compute, utility]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama
